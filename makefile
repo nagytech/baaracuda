@@ -1,14 +1,15 @@
 COMPILER = nvcc
-CFLAGS = -I /usr/local/cuda-7.5/samples/common/inc -std=c++11
-EXES = baaracuda 
+CFLAGS = --compiler-options -Wall -I /usr/local/cuda-7.5/samples/common/inc -std=c++11
+OBJECTS = csvloader.o
+EXES = baaracuda
 
 all: ${EXES}
 
-baaracuda:  main.cu
-	${COMPILER} ${CFLAGS} main.cu -o baaracuda
+csvloader.o: csvloader.cpp
+	${COMPILER} ${CFLAGS} -c csvloader.cpp
 
-%.o: %.c %.h  makefile
-	${COMPILER} ${CFLAGS} $< -c 
+baaracuda: main.cu csvloader.o
+	${COMPILER} ${CFLAGS} main.cu ${OBJECTS} -o baaracuda
 
 clean:
-	rm -f *.o *~ ${EXES} ${CFILES}
+	rm -f *~ ${EXES} ${OBJECTS}
