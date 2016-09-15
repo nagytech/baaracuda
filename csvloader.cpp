@@ -2,7 +2,7 @@
 #include <string.h>
 #include "csvloader.h"
 
-int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out) {
+int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out, int *size) {
 
   int e, i;
   size_t lbmax;
@@ -28,14 +28,17 @@ int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out) {
     return EXIT_FAILURE;
   }
 
-  arr = (COLUMN_TYPE **)malloc(y * sizeof(COLUMN_TYPE *) + (y * (x * sizeof(COLUMN_TYPE))));
+  *size = y * sizeof(COLUMN_TYPE *) + (y * (x * sizeof(COLUMN_TYPE)));
+
+  arr = (COLUMN_TYPE **)malloc(*size);
   if (arr == NULL) {
     fprintf(stderr, "Out of memory.  Could not allocate for data array\n");
     return EXIT_FAILURE;
   }
 
-  COLUMN_TYPE *data = (COLUMN_TYPE *)&arr[y];
-  for (i = 0; i < y; i++, data += x)
+  /* TODO: Configure a transpose */
+  COLUMN_TYPE *data = (COLUMN_TYPE *)&arr[x];
+  for (i = 0; i < x; i++, data += y)
       arr[i] = data;
 
   for (rct = 0; rct < y; rct++) {
@@ -61,7 +64,7 @@ int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out) {
         break;
       }
 
-      arr[rct][cct] = strtof(colval, NULL);
+      arr[cct][rct] = strtof(colval, NULL);
 
       cct++;
       colval = strtok(NULL, COLUMN_DELIMITER);

@@ -30,6 +30,6 @@
 int rowct(FILE *fp, int *y);
 int colct(FILE *fp, int *x);
 
-int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out);
+int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out, int *size);
 
 #endif
