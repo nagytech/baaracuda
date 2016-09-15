@@ -1,5 +1,5 @@
 COMPILER = nvcc
-CFLAGS = -I /usr/local/cuda-7.5/samples/common/inc 
+CFLAGS = -I /usr/local/cuda-7.5/samples/common/inc -std=c++11
 EXES = baaracuda 
 
 all: ${EXES}

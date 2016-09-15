@@ -7,110 +7,272 @@
  * of the programming guide with some additions like error checking.
  */
 
-#include <stdio.h>
+#include <string>
+#include <sstream>
 #include <cuda_runtime.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-#define NUM_ELEMENTS 50000
+#define COLUMN_DELIMITER            ","
+#define COLUMN_TYPE                 float
+#define COLUMN_TYPE_FORMAT          "%f"
+#define HEADER_ROWS                 0
+#define MAX_COLUMNS                 5
+#define MAX_LINE_BUFFER             1024
+#define MAX_ROWS                    32 * MAX_COLUMNS * 1024
 
-/**
- * CUDA Kernel Device code
- *
- * Computes the vector addition of A and B into C. The 3 vectors have the same
- * number of elements numElements.
- */
-__global__ void
-vectorAdd(const float *A, const float *B, float *C, int numElements)
-{
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+#define READ_CSV_OK                  0
+#define ERR_MAX_COL_EXCEEDED        -1
+#define ERR_MAX_COL_EXCEEDED_M      \
+  "Maximum allowable column size exceeded.  Line %d has %d columns, maximum %d\n"
+#define ERR_MAX_ROW_EXCEEDED_M      \
+  "Maximum row count exceeded: found %d, maximum %d\n"
+#define ERR_ROW_NOT_FOUND_M         \
+  "Row %d could not be read\n"
+#define ERR_COL_MISMATCH            -2
+#define ERR_COL_MISMATCH_M          \
+  "Column count mismatch. Line %d has %d columns, expected %d\n"
+#define ERR_COL_PARSE_M             \
+  "Column parsing error. line %d, column %d\n"
 
-    // We might end up launching more threads than elements because
-    // we launch in block-sized denominations.
-    if (i < numElements)
-    {
-        C[i] = A[i] + B[i];
+#define DEBUG
+
+int rowct(FILE *fp, int *y);
+int colct(FILE *fp, int *x);
+
+int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out);
+
+int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out) {
+
+  int e, i;
+  size_t lbmax;
+  char *line, *colval;
+  int rct, cct;
+  COLUMN_TYPE **arr;
+
+  e = READ_CSV_OK;
+
+  if (fp == NULL) {
+    fprintf(stderr, "File pointer was null.\n");
+    return EXIT_FAILURE;
+  }
+
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    fprintf(stderr, "Could not seek start of file.\n");
+    return EXIT_FAILURE;
+  }
+
+  line = (char *)malloc(MAX_LINE_BUFFER * sizeof(char));
+  if (line == NULL) {
+    fprintf(stderr, "Out of memory.  Could not allocate for column counter\n");
+    return EXIT_FAILURE;
+  }
+
+  arr = (COLUMN_TYPE **)malloc(y * sizeof(COLUMN_TYPE *) + (y * (x * sizeof(COLUMN_TYPE))));
+  if (arr == NULL) {
+    fprintf(stderr, "Out of memory.  Could not allocate for data array\n");
+    return EXIT_FAILURE;
+  }
+
+  COLUMN_TYPE *data = (COLUMN_TYPE *)&arr[y];
+  for (i = 0; i < y; i++, data += x)
+      arr[i] = data;
+
+  for (rct = 0; rct < y; rct++) {
+
+    getline(&line, &lbmax, fp);
+
+    if (rct < HEADER_ROWS) {
+#ifdef DEBUG
+      fprintf(stdout, "skipping header, row %d\n", rct);
+#endif
+      continue;
     }
+
+    cct = 0;
+    colval = strtok(line, COLUMN_DELIMITER);
+    while (colval != NULL) {
+#ifdef TRACE
+      fprintf(stdout, "row %d:%d, value %s\n", rct, cct, colval);
+#endif
+      if (cct > MAX_COLUMNS) {
+        e = ERR_MAX_COL_EXCEEDED;
+        fprintf(stderr, ERR_MAX_COL_EXCEEDED_M, rct, cct, MAX_COLUMNS);
+        break;
+      }
+
+      arr[rct][cct] = strtof(colval, NULL);
+
+      cct++;
+      colval = strtok(NULL, COLUMN_DELIMITER);
+    }
+
+    if (x != cct) {
+      e = ERR_COL_MISMATCH;
+      fprintf(stderr, ERR_COL_MISMATCH_M, rct, cct, x);
+      break;
+    }
+
+  }
+
+  if (e != READ_CSV_OK) {
+    fprintf(stderr, ERR_COL_PARSE_M, rct, cct);
+    // TODO: Free all lines.
+    free(line);
+    return EXIT_FAILURE;
+  }
+
+#ifdef DEBUG
+  fprintf(stdout, "%d columns identified from csv file\n", cct);
+#endif
+
+  *arr_out = arr;
+
+  return EXIT_SUCCESS;
+
 }
 
-/**
- * Host main Program
- */
-int
-main(void)
-{
+int colct(FILE *fp, int *x) {
 
-    // Print the vector length to be used, and compute its size
-    size_t size = NUM_ELEMENTS * sizeof(float);
-    printf("[Vector addition of %d elements]\n", NUM_ELEMENTS);
+  int i, cols;
+  char *line, *colval;
+  size_t max_buf;
 
-    // Allocate the host array A
-    float *h_A = (float *)malloc(size);
+  if (fp == NULL) {
+    fprintf(stderr, "File pointer was null.\n");
+    return EXIT_FAILURE;
+  }
 
-    // Allocate the host array B
-    float *h_B = (float *)malloc(size);
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    fprintf(stderr, "Could not seek start of file.\n");
+    return EXIT_FAILURE;
+  }
 
-    // Allocate the host  array C to store the result
-    float *h_C = (float *)malloc(size);
+  max_buf = MAX_LINE_BUFFER;
+  line = (char *)calloc(max_buf, sizeof(char));
+  if (line == NULL) {
+    fprintf(stderr, "Out of memory.  Failed to assign buffer for line_count.\n");
+    return EXIT_FAILURE;
+  }
 
-    // Initialize arrays A and B
-    for (int i = 0; i < NUM_ELEMENTS; ++i)
-    {
-        h_A[i] = rand()/(float)RAND_MAX;
-        h_B[i] = rand()/(float)RAND_MAX;
-    }
+  for (i = 0; i < HEADER_ROWS + 1; i++) {
+    getline(&line, &max_buf, fp);
+  }
 
-    // Allocate the device array A
-    float *d_A = NULL;
-    cudaMalloc((void **)&d_A, size);
+  if (line == NULL) {
+    fprintf(stderr, ERR_ROW_NOT_FOUND_M, i);
+    free(line);
+    return EXIT_FAILURE;
+  }
 
-    // Allocate the device array B
-    float *d_B = NULL;
-    cudaMalloc((void **)&d_B, size);
+  cols = 0;
+  colval = strtok(line, COLUMN_DELIMITER);
+  while (colval != NULL) {
+    cols++;
+    colval = strtok(NULL, COLUMN_DELIMITER);
+  }
 
-    // Allocate the device array C
-    float *d_C = NULL;
-    cudaMalloc((void **)&d_C, size);
+  #ifdef DEBUG
+    fprintf(stdout, "col count: %d\n", cols);
+  #endif
 
-    // Copy the host input vectors A and B in host memory to the device input vectors in
-    // device memory
-    printf("Copy data from the host memory to the CUDA device\n");
-    cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
+  if (cols > MAX_COLUMNS) {
+    fprintf(stderr, ERR_MAX_COL_EXCEEDED_M, cols, MAX_COLUMNS);
+    free(line);
+    return EXIT_FAILURE;
+  }
 
-    // Launch the VectorAdd CUDA Kernel
-    int threadsPerBlock = 128;
-    // Number of Blocks - ensures 1 thread be element
-    int blocksPerGrid =(NUM_ELEMENTS + threadsPerBlock - 1) / threadsPerBlock;
-    printf("CUDA kernel launch with %d blocks of %d threads\n", blocksPerGrid, threadsPerBlock);
+  *x = cols;
 
-    vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, NUM_ELEMENTS);
+  free(line);
 
-    // Copy the device result vector in device memory to the host result vector
-    // in host memory.
-    printf("Copy output data from the CUDA device to the host memory\n");
-    cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
+  return EXIT_SUCCESS;
 
-    // Verify that the result vector is correct
-    for (int i = 0; i < NUM_ELEMENTS; ++i)
-    {
-        if (fabs(h_A[i] + h_B[i] - h_C[i]) > 1e-5)
-        {
-            fprintf(stderr, "Result verification failed at element %d!\n", i);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    printf("Test PASSED\n");
-
-	// Free device global memory
-	cudaFree(d_A);
-	cudaFree(d_B);
-	cudaFree(d_C);
-
-	// Free host memory
-	free(h_A);
-	free(h_B);
-	free(h_C);
-
-	return 0;
 }
 
+
+int rowct(FILE *fp, int *y) {
+
+  int i;
+  char *buf;
+  size_t max_buf;
+
+  if (fp == NULL) {
+    fprintf(stderr, "File pointer was null.\n");
+    return EXIT_FAILURE;
+  }
+
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    fprintf(stderr, "Could not seek start of file.\n");
+    return EXIT_FAILURE;
+  }
+
+  max_buf = MAX_LINE_BUFFER;
+  buf = (char *)calloc(max_buf, sizeof(char));
+  if (buf == NULL) {
+    fprintf(stderr, "Out of memory.  Failed to assign buffer for line_count.\n");
+    return EXIT_FAILURE;
+  }
+
+  i = 0;
+  while (getline(&buf, &max_buf, fp) != EOF) {
+    i++;
+#ifdef DEBUG
+    if (i % 10000 == 0)
+    fprintf(stdout, "row count: %d...\n", i);
+  #ifdef TRACE
+    fprintf(stdout, "%d: %s", i, buf);
+  #endif
+#endif
+  }
+
+  if (i > MAX_ROWS) {
+    fprintf(stderr, ERR_MAX_ROW_EXCEEDED_M, i, MAX_ROWS);
+    free(buf);
+    return EXIT_FAILURE;
+  }
+
+#ifdef DEBUG
+  fprintf(stdout, "row count: %d\n", i);
+#endif
+
+  *y = i;
+
+  free(buf);
+
+  return EXIT_SUCCESS;
+
+}
+
+int main(int argc, char **argv)
+{
+  char *fn;
+  COLUMN_TYPE **arr;
+  FILE *csv;
+  int x, y;
+
+  fn = argv[1];
+
+  csv = fopen(fn, "r");
+  if (csv == NULL) {
+    fprintf(stderr, "Failed to open file %s\n", fn);
+    return EXIT_FAILURE;
+  }
+
+  x = y = 0;
+
+  if (rowct(csv, &y) == EXIT_FAILURE || colct(csv, &x) == EXIT_FAILURE) {
+    return EXIT_FAILURE;
+  }
+
+  if (readcsv(csv, x, y, &arr) == EXIT_FAILURE) {
+    return EXIT_FAILURE;
+  }
+
+  fclose(csv);
+
+  fprintf(stdout, "%f\n", arr[1][1]);
+
+  return 0;
+}
