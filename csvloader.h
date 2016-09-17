@@ -2,17 +2,7 @@
 #define _CSVLOADER_H_
 
 #include <stdio.h>
-
-/* Constants */
-#define ABS_FUNC                    fabs
-#define COLUMN_DELIMITER            ","
-#define COLUMN_TYPE                 float
-#define HEADER_ROWS                 0
-#define MAX_COLUMNS                 8
-#define MAX_LINE_BUFFER             1024
-/* TODO: should be constrained by memory, or max size of int. But could also use long for indexer */
-#define MAX_ROWS                    1024 * 1024
-#define SQRT_FUNC                   sqrtf
+#include "const.h"
 
 /* CSV Output Configuration */
 #define DECIMAL_PLACES              8
@@ -37,4 +27,4 @@ int rowct(FILE *fp, int *y);
 int colct(FILE *fp, int *x);
 int readcsv(FILE *fp, int x, int y, COLUMN_TYPE **arr);
 
-#endif
+#endif /* _CSV_LOADER_H_ */
