@@ -7,12 +7,8 @@
 
 #define DEBUG
 
-#define OUT_FORMAT_READING    ",%.0f"
-#define OUT_FORMAT_MAG        ",%.0f"
-#define OUT_FORMAT_AMI        ",%.0f"
-#define OUT_FORMAT_AVG        ",%0.2f"
-#define OUT_FORMAT_STD        ",%0.8f"
-
+/* TODO: Error checking */
+/* TODO: Better output formatting */
 
 int main(int argc, char **argv) {
 
@@ -23,12 +19,12 @@ int main(int argc, char **argv) {
 
   fn = argv[1];
 
+  /* Read in the CSV file */
   csv = fopen(fn, "r");
   if (csv == NULL) {
     fprintf(stderr, "Failed to open file %s\n", fn);
     return EXIT_FAILURE;
   }
-
   x = y = 0;
   if (rowct(csv, &y) == EXIT_FAILURE || colct(csv, &x) == EXIT_FAILURE)
     return EXIT_FAILURE;
@@ -36,16 +32,19 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   fclose(csv);
 
+  /* Set CUDA Thread / Block Limits */
   int tpb = 128;
-  int bpg_multi =(y + tpb - 1) / tpb;
-  int bpg_singl =((x * y) + tpb - 1) / tpb;
+  int bpg_multi = (y + tpb - 1) / tpb;
+  int bpg_singl = ((x * y) + tpb - 1) / tpb;
 
   size_t ct_size = sizeof(COLUMN_TYPE);
 
+  /* Copy the input array over to the device */
   COLUMN_TYPE *d_arr = NULL;
   cudaMalloc((void **)&d_arr, x * y * ct_size);
   cudaMemcpy(d_arr, arr, x * y * ct_size, cudaMemcpyHostToDevice);
 
+  /* Perform the signalMagnitude calculation */
   COLUMN_TYPE *d_mag = NULL, *mag;
   cudaMalloc((void **)&d_mag, y * ct_size);
   signalMagnitude<<<bpg_multi, tpb>>>(d_mag, d_arr, x, y);
@@ -53,6 +52,7 @@ int main(int argc, char **argv) {
   cudaMemcpy(mag, d_mag, y * ct_size, cudaMemcpyDeviceToHost);
   cudaFree(d_mag);
 
+  /* Perform the averageMovementIntensity calculation */
   COLUMN_TYPE *d_ami = NULL, *ami = NULL;
   cudaMalloc((void **)&d_ami, y * ct_size);
   averageMovementIntensity<<<bpg_multi, tpb>>>(d_ami, d_arr, x, y);
@@ -60,6 +60,7 @@ int main(int argc, char **argv) {
   cudaMemcpy(ami, d_ami, y * ct_size, cudaMemcpyDeviceToHost);
   cudaFree(d_ami);
 
+  /* Perform the standardDeviation / mean calculation */
   COLUMN_TYPE *d_dev = NULL, *d_avg = NULL, *dev = NULL, *avg = NULL;
   cudaMalloc((void **)&d_dev, x * y * ct_size);
   cudaMalloc((void **)&d_avg, x * y * ct_size);
@@ -71,6 +72,10 @@ int main(int argc, char **argv) {
   cudaFree(d_dev);
   cudaFree(d_avg);
 
+  /* Complete usage of the data array */
+  cudaFree(d_arr);
+
+  /* Output the results */
   fprintf(stdout, "ID");
   for (int r = 1; r <= x; r++)
     fprintf(stdout, ",INPUT_%d", r);
@@ -93,18 +98,13 @@ int main(int argc, char **argv) {
     fprintf(stdout, "\n");
   }
 
-  cudaFree(d_arr);
-  cudaFree(d_mag);
-  cudaFree(d_ami);
-  cudaFree(d_dev);
-  cudaFree(d_avg);
-
+  /* Release all memory */
   free(arr);
   free(mag);
   free(ami);
   free(dev);
   free(avg);
 
-  return 0;
+  return EXIT_SUCCESS;
 
 }
