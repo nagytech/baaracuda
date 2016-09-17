@@ -7,6 +7,13 @@
 
 #define DEBUG
 
+#define OUT_FORMAT_READING    ",%.0f"
+#define OUT_FORMAT_MAG        ",%.0f"
+#define OUT_FORMAT_AMI        ",%.0f"
+#define OUT_FORMAT_AVG        ",%0.2f"
+#define OUT_FORMAT_STD        ",%0.8f"
+
+
 int main(int argc, char **argv) {
 
   char *fn;
@@ -64,15 +71,25 @@ int main(int argc, char **argv) {
   cudaFree(d_dev);
   cudaFree(d_avg);
 
+  fprintf(stdout, "ID");
+  for (int r = 1; r <= x; r++)
+    fprintf(stdout, ",INPUT_%d", r);
+  fprintf(stdout, ",MAG,AMI");
+  for (int r = 1; r <= x; r++)
+    fprintf(stdout, ",STDEV_%d", r);
+  for (int r = 1; r <= x; r++)
+    fprintf(stdout, ",MEAN_%d", r);
+  fprintf(stdout, "\n");
   for (int q = 0; q < y - WINDOW; q++) {
     fprintf(stdout, "%d", q);
     for (int r = 0; r < x; r++)
-      fprintf(stdout, "\t%f", arr[(q * x) + r]);
-    fprintf(stdout, "\t%f\t%f", mag[q], ami[q]);
+      fprintf(stdout, OUT_FORMAT_READING, arr[(q * x) + r]);
+    fprintf(stdout, OUT_FORMAT_MAG, mag[q]);
+    fprintf(stdout, OUT_FORMAT_AMI, ami[q]);
     for (int r = 0; r < x; r++)
-      fprintf(stdout, "\t%f", dev[(q * x) + r]);
+      fprintf(stdout, OUT_FORMAT_STD, dev[(q * x) + r]);
     for (int r = 0; r < x; r++)
-      fprintf(stdout, "\t%f", avg[(q * x) + r]);
+      fprintf(stdout, OUT_FORMAT_AVG, avg[(q * x) + r]);
     fprintf(stdout, "\n");
   }
 
