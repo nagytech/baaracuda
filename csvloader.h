@@ -4,12 +4,18 @@
 #include <stdio.h>
 
 /* Constants */
+#define ABS_FUNC                    fabs
 #define COLUMN_DELIMITER            ","
 #define COLUMN_TYPE                 float
 #define HEADER_ROWS                 0
 #define MAX_COLUMNS                 8
 #define MAX_LINE_BUFFER             1024
+/* TODO: should be constrained by memory, or max size of int. But could also use long for indexer */
 #define MAX_ROWS                    1024 * 1024
+#define SQRT_FUNC                   sqrtf
+
+/* CSV Output Configuration */
+#define DECIMAL_PLACES              8
 
 /* Error Codes, Messages */
 #define READ_CSV_OK                  0
@@ -29,7 +35,6 @@
 
 int rowct(FILE *fp, int *y);
 int colct(FILE *fp, int *x);
-
-int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out, int *size);
+int readcsv(FILE *fp, int x, int y, COLUMN_TYPE **arr);
 
 #endif

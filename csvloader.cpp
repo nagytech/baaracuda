@@ -2,15 +2,16 @@
 #include <string.h>
 #include "csvloader.h"
 
-int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out, int *size) {
+int readcsv(FILE *fp, int x, int y, COLUMN_TYPE **arr_out) {
 
-  int e, i;
+  int e;
   size_t lbmax;
   char *line, *colval;
-  int rct, cct;
-  COLUMN_TYPE **arr;
+  int rct, cct, size;
+  COLUMN_TYPE *arr;
 
   e = READ_CSV_OK;
+  size = x * y;
 
   if (fp == NULL) {
     fprintf(stderr, "File pointer was null.\n");
@@ -28,18 +29,11 @@ int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out, int *size) {
     return EXIT_FAILURE;
   }
 
-  *size = y * sizeof(COLUMN_TYPE *) + (y * (x * sizeof(COLUMN_TYPE)));
-
-  arr = (COLUMN_TYPE **)malloc(*size);
+  arr = (COLUMN_TYPE *)calloc(size, sizeof(COLUMN_TYPE));
   if (arr == NULL) {
     fprintf(stderr, "Out of memory.  Could not allocate for data array\n");
     return EXIT_FAILURE;
   }
-
-  /* TODO: Configure a transpose */
-  COLUMN_TYPE *data = (COLUMN_TYPE *)&arr[x];
-  for (i = 0; i < x; i++, data += y)
-      arr[i] = data;
 
   for (rct = 0; rct < y; rct++) {
 
@@ -64,7 +58,8 @@ int readcsv(FILE *fp, int x, int y, COLUMN_TYPE ***arr_out, int *size) {
         break;
       }
 
-      arr[cct][rct] = strtof(colval, NULL);
+      /* Vector indexing via row major order */
+      arr[(rct * x) + cct] = strtof(colval, NULL);
 
       cct++;
       colval = strtok(NULL, COLUMN_DELIMITER);
