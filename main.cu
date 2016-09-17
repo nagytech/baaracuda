@@ -19,12 +19,18 @@ int main(int argc, char **argv) {
 
   fn = argv[1];
 
-  /* Read in the CSV file */
+  /* Open CSV file */
+  if (fn == NULL) {
+    fprintf(stderr, "Error: no file name supplied.\n\tUsage %s <input_csv_filename>\n", args[0]);
+    return EXIT_FAILURE;
+  }
   csv = fopen(fn, "r");
   if (csv == NULL) {
     fprintf(stderr, "Failed to open file %s\n", fn);
     return EXIT_FAILURE;
   }
+
+  /* Read CSV file data into memory */
   x = y = 0;
   if (rowct(csv, &y) == EXIT_FAILURE || colct(csv, &x) == EXIT_FAILURE)
     return EXIT_FAILURE;
@@ -41,8 +47,13 @@ int main(int argc, char **argv) {
 
   /* Copy the input array over to the device */
   COLUMN_TYPE *d_arr = NULL;
-  cudaMalloc((void **)&d_arr, x * y * ct_size);
-  cudaMemcpy(d_arr, arr, x * y * ct_size, cudaMemcpyHostToDevice);
+  if (cudaMalloc((void **)&d_arr, x * y * ct_size) != cudaSuccess) {
+    return EXIT_FAILURE;
+  }
+  if (cudaMemcpy(d_arr, arr, x * y * ct_size,
+      cudaMemcpyHostToDevice) != cudaSuccess) {
+    return EXIT_FAILURE;
+  }
 
   /* Perform the signalMagnitude calculation */
   COLUMN_TYPE *d_mag = NULL, *mag;
