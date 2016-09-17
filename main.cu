@@ -64,8 +64,16 @@ int main(int argc, char **argv) {
   cudaFree(d_dev);
   cudaFree(d_avg);
 
-  for (int q = 0; q < y; q++) {
-    fprintf(stdout, "%d:\t%f\t%f\t%f\t%f\t%f\n", q, arr[q], mag[q], ami[q], dev[q * 3], avg[q * 3]);
+  for (int q = 0; q < y - WINDOW; q++) {
+    fprintf(stdout, "%d", q);
+    for (int r = 0; r < x; r++)
+      fprintf(stdout, "\t%f", arr[(q * x) + r]);
+    fprintf(stdout, "\t%f\t%f", mag[q], ami[q]);
+    for (int r = 0; r < x; r++)
+      fprintf(stdout, "\t%f", dev[(q * x) + r]);
+    for (int r = 0; r < x; r++)
+      fprintf(stdout, "\t%f", avg[(q * x) + r]);
+    fprintf(stdout, "\n");
   }
 
   cudaFree(d_arr);

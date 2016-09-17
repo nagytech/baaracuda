@@ -1,10 +1,8 @@
-#include "kernels.h"
 #include "const.h"
+#include "kernels.h"
 
 #define ABS_FUNC                    fabs
 #define SQRT_FUNC                   sqrtf
-
-#define WINDOW                      25
 
 __global__
 void signalMagnitude(
