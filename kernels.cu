@@ -46,7 +46,7 @@
  * y:     height of data array
  *
  */
-__device__
+__global__
 void signalMagnitude(
   DATA_T *ans, const DATA_T *arr, int x, int y) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -89,7 +89,7 @@ void signalMagnitude(
  * y:     height of data array
  *
  */
-__device__
+__global__
 void averageMovementIntensity(
   DATA_T *ans, const DATA_T *arr, int x, int y) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -134,7 +134,7 @@ void averageMovementIntensity(
  * y:     height of data array
  *
  */
-__device__
+__global__
 void standardDeviation(
   DATA_T *dev, DATA_T *avg, const DATA_T *arr,
   int x, int y, int xy) {

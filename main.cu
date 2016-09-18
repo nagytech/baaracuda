@@ -26,12 +26,13 @@
  * ------------------------------------------------------------------------ */
 
 #include <cuda_runtime.h>
-
+#include <stdio.h>
 #include "const.h"
 #include "runner.h"
 #include "csvloader.h"
 
 #define DEBUG
+#define TRACE
 
 /**
  * main
@@ -43,18 +44,22 @@ int main(int argc, char **argv) {
 
   char *fn;
   int x, y;
-  DATA_T *data;
-  DATA_T *mag, *ami, *dev, *avg;
+  DATA_T *data = NULL;
+  DATA_T *mag = NULL, *ami = NULL, *dev = NULL, *avg = NULL;
 
   fn = argv[1];
 
-  if (loadcsv(fn, data, &x, &y) != EXIT_SUCCESS) {
+  if (loadcsv(fn, &data, &x, &y) != EXIT_SUCCESS) {
     fprintf(stderr, "Failed to load CSV file\n");
+    if (data != NULL)
+      free(data);
     return EXIT_FAILURE;
   }
 
-  if (do_calcs(data, mag, ami, dev, avg) != EXIT_SUCCESS) {
-    printf(stderr, "Failed to perform one or more calculations\n");
+  cudaThreadSynchronize();
+
+  if (do_calcs(data, &mag, &ami, &dev, &avg, x, y) != EXIT_SUCCESS) {
+    fprintf(stderr, "Failed to perform one or more calculations\n");
     if (data != NULL)
       free(data);
     return EXIT_FAILURE;
@@ -73,7 +78,7 @@ int main(int argc, char **argv) {
   for (int q = 0; q < y - WINDOW; q++) {
     fprintf(stdout, "%d", q);
     for (int r = 0; r < x; r++)
-      fprintf(stdout, OUT_FORMAT_READING, arr[(q * x) + r]);
+      fprintf(stdout, OUT_FORMAT_READING, data[(q * x) + r]);
     fprintf(stdout, OUT_FORMAT_MAG, mag[q]);
     fprintf(stdout, OUT_FORMAT_AMI, ami[q]);
     for (int r = 0; r < x; r++)
@@ -84,7 +89,7 @@ int main(int argc, char **argv) {
   }
 
   /* Release all memory */
-  free(arr);
+  free(data);
   free(mag);
   free(ami);
   free(dev);

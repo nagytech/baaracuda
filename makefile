@@ -8,8 +8,8 @@ all: ${EXES}
 csvloader.o: csvloader.cpp
 	${COMPILER} ${CFLAGS} -c csvloader.cpp
 
-kernels.o: runner.cpp kernels.o
-	${COMPILER} ${CFLAGS} -c runner.cpp kernels.o
+runner.o: runner.cu kernels.o
+	${COMPILER} ${CFLAGS} -c runner.cu kernels.o
 
 kernels.o: kernels.cu
 	${COMPILER} ${CFLAGS} -c kernels.cu

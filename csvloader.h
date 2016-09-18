@@ -4,6 +4,6 @@
 #include "const.h"
 
 /* Public functions */
-int loadcsv(char *fn, DATA_T *data, int *x, int *y);
+int loadcsv(char *fn, DATA_T **data, int *x, int *y);
 
 #endif /* _CSV_LOADER_H_ */

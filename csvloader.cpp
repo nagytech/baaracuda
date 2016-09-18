@@ -9,6 +9,7 @@
  * ------------------------------------------------------------------------ */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "csvloader.h"
 
@@ -141,7 +142,7 @@ int colct(FILE *fp, int *x) {
  *
  * @return      success or failure
  */
-int loadcsv(char *fn, DATA_T *data, int *x, int *y) {
+int loadcsv(char *fn, DATA_T **data, int *x, int *y) {
 
   FILE *csv;
 
@@ -163,7 +164,7 @@ int loadcsv(char *fn, DATA_T *data, int *x, int *y) {
     return EXIT_FAILURE;
 
   /* Read CSV file data into memory */
-  if (readcsv(csv, *x, *y, &data) == EXIT_FAILURE)
+  if (readcsv(csv, *x, *y, data) == EXIT_FAILURE)
     return EXIT_FAILURE;
 
   fclose(csv);
