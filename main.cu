@@ -23,6 +23,11 @@
  * graphics. It will also require the CUDA SDK installed for any further
  * development purposes.
  *
+ * TODO: To be more efficient, we may want to have the kernels execute the 
+ * rudimentary calculations for each feature prior to the major functions (ie.
+ * it would be easier to compute |x| for each feature rather than iterating 
+ * 'n' times for each window element.
+ *
  * ------------------------------------------------------------------------ */
 
 #include <cuda_runtime.h>
