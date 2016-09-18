@@ -5,17 +5,17 @@
 
 __global__
 void signalMagnitude(
-  COLUMN_TYPE *ans, const COLUMN_TYPE *arr,
+  DATA_T *ans, const DATA_T *arr,
   int x, int y);
 
 __global__
 void averageMovementIntensity(
-  COLUMN_TYPE *ans, const COLUMN_TYPE *arr,
+  DATA_T *ans, const DATA_T *arr,
   int x, int y);
 
 __global__
 void standardDeviation(
-  COLUMN_TYPE *dev, COLUMN_TYPE *avg, const COLUMN_TYPE *arr,
+  DATA_T *dev, DATA_T *avg, const DATA_T *arr,
   int x, int y, int xy);
 
 #endif /* _KERNELS_H_ */

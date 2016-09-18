@@ -37,12 +37,12 @@
  */
 __global__
 void signalMagnitude(
-  COLUMN_TYPE *ans, const COLUMN_TYPE *arr, int x, int y) {
+  DATA_T *ans, const DATA_T *arr, int x, int y) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   /* Filter over-allocated threads, but ignore last (window - 1) records */
   if (i + WINDOW < y) {
     int j, k;
-    COLUMN_TYPE sig = 0;
+    DATA_T sig = 0;
     /* Iterate through sliding window */
     for (j = 0; j < WINDOW; j++) {
       /* Iterate through columns within current window position */
@@ -80,12 +80,12 @@ void signalMagnitude(
  */
 __global__
 void averageMovementIntensity(
-  COLUMN_TYPE *ans, const COLUMN_TYPE *arr, int x, int y) {
+  DATA_T *ans, const DATA_T *arr, int x, int y) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   /* Filter over-allocated threads, but ignore last (window - 1) records */
   if (i + WINDOW < y) {
     int j, k;
-    COLUMN_TYPE sig = 0;
+    DATA_T sig = 0;
     /* Iterate through sliding window */
     for (j = 0; j < WINDOW; j++) {
       /* Iterate through columns within current window position */
@@ -125,13 +125,13 @@ void averageMovementIntensity(
  */
 __global__
 void standardDeviation(
-  COLUMN_TYPE *dev, COLUMN_TYPE *avg, const COLUMN_TYPE *arr,
+  DATA_T *dev, DATA_T *avg, const DATA_T *arr,
   int x, int y, int xy) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   /* Filter over-allocated threads, but ignore last (window - 1) records */
   if (i + (WINDOW * x) < xy) {
     int j;
-    COLUMN_TYPE mean, sig, sum;
+    DATA_T mean, sig, sum;
     sum = 0; sig = 0;
     /* Iterate through sliding window for summation */
     for (j = 0; j < WINDOW; j++)

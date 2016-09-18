@@ -9,7 +9,7 @@
  */
 
 #define COLUMN_DELIMITER            ","           /* Input delimiter */
-#define COLUMN_TYPE                 float         /* Data type */
+#define DATA_T                 float         /* Data type */
 #define HEADER_ROWS                 0             /* Number of header rows */
 #define MAX_COLUMNS                 8             /* Maximum CSV columns */
 #define MAX_LINE_BUFFER             1024          /* Initially, will expand */
