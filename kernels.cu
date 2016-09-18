@@ -1,19 +1,30 @@
 /*
  * kernels.cu
  * ----------
- * This file contains a set of CUDA kernels used for computing various
+ *
+ * Author: Jonathan Nagy <jnagy@myune.edu.au>
+ * Date:   18 Sep 2016
+ * Description:
+ *
+ *    This file contains a set of CUDA kernels used for computing various
  * statistical properties.  Note that all values are calculated within a
  * sliding window of `n` to `n + (WINDOW - 1)`.
  *
- * All kernels are capable of accepting any number of input values and will
- * collapse the output into a single value.
+ *    All kernels are capable of accepting any number of input values and will
+ * collapse the output into a single value.  However, some kernels are designed
+ * to compute values _across_ features, while others are designed to compute
+ * _within_ features.  This is determined by the presence of a precalculated
+ * size (written as xy) which depticts the complete dimensions of the array and
+ * indicates that each individual feature is to be used as an input.
+ *
  * ------------------------------------------------------------------------ */
 
 #include "const.h"
 #include "kernels.h"
 
-#define ABS_FUNC                    fabs
-#define SQRT_FUNC                   sqrtf
+/* Function definitions */
+#define ABS_FUNC                    fabs    /* For computing absolute value */
+#define SQRT_FUNC                   sqrtf   /* For computing square root */
 
 /*
  * signalMagnitude
@@ -35,7 +46,7 @@
  * y:     height of data array
  *
  */
-__global__
+__device__
 void signalMagnitude(
   DATA_T *ans, const DATA_T *arr, int x, int y) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -78,7 +89,7 @@ void signalMagnitude(
  * y:     height of data array
  *
  */
-__global__
+__device__
 void averageMovementIntensity(
   DATA_T *ans, const DATA_T *arr, int x, int y) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -123,7 +134,7 @@ void averageMovementIntensity(
  * y:     height of data array
  *
  */
-__global__
+__device__
 void standardDeviation(
   DATA_T *dev, DATA_T *avg, const DATA_T *arr,
   int x, int y, int xy) {

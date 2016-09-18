@@ -1,15 +1,22 @@
-#ifndef _CONST_H_
-#define _CONST_H_
-
 /*
  * const.h
  * -------
- * Globally applicable constants for handling the csv and data processing
  *
- */
+ * Author: Jonathan Nagy <jnagy@myune.edu.au>
+ * Date:   18 Sep 2016
+ *
+ * Description:
+ *
+ *    Globally applicable constants for handling the csv and data processing
+ *
+ * ------------------------------------------------------------------------ */
 
+#ifndef _CONST_H_
+#define _CONST_H_
+
+/* Configuration Values */
 #define COLUMN_DELIMITER            ","           /* Input delimiter */
-#define DATA_T                 float         /* Data type */
+#define DATA_T                      float         /* Data type */
 #define HEADER_ROWS                 0             /* Number of header rows */
 #define MAX_COLUMNS                 8             /* Maximum CSV columns */
 #define MAX_LINE_BUFFER             1024          /* Initially, will expand */

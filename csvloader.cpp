@@ -1,8 +1,12 @@
 /* csvloader.cpp
  * -------------
- * Facilitates the loading of data from a CSV file into memory.
  *
- */
+ * Author: Jonathan Nagy <jnagy@myune.edu.au>
+ * Date:   18 Sep 2016
+ * Description:
+ *    Facilitates the loading of data from a CSV file into memory.
+ *
+ * ------------------------------------------------------------------------ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -43,10 +47,10 @@
 #define TRACE_COLUMN_VALUE          "row %d:%d, value %s\n"
 #define TRACE_LINE_BUFFER           "%d: %s\n"
 
+/* Foreward Declarations */
 int colct(FILE *fp, int *x);
 int readcsv(FILE *fp, int x, int y, DATA_T **data);
 int rowct(FILE *fp, int *y);
-
 
 /**
  * colct

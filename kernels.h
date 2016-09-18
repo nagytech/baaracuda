@@ -3,6 +3,10 @@
 
 #include "const.h"
 
+/* Threads per block */
+#define TPB                           128
+
+/* Public Functions */
 __global__
 void signalMagnitude(
   DATA_T *ans, const DATA_T *arr,

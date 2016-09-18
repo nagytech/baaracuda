@@ -1,13 +1,44 @@
+/**
+ * main.cu
+ * -------
+ *
+ * baaRaCUDA - A parralell computation engine for the CUDA architecture.
+ *
+ * Author: Jonathan Nagy <jnagy@myune.edu.au>
+ * Date:   18 Sep 2016
+ * Usage:
+ *
+ *   baaracuda <input_file_name>
+ *
+ * Description:
+ *
+ *    This application performs multiple statistical calculations in paralell using
+ * a GPU via CUDA.  The input CSV can be a variably sized dataset within the
+ * constraints set byt he const.h file.
+ *
+ *    Output will be written to stdio, which can then be redirected or piped to any
+ * other location.
+ *
+ *    In order to compile and run, it requires a CUDA compatible NVIDIA graphics.
+ * It will also require the CUDA SDK installed for any further development
+ * purposes.
+ *
+ * ------------------------------------------------------------------------ */
 
 #include <cuda_runtime.h>
 
 #include "const.h"
 #include "runner.h"
-#include "kernels.h"
 #include "csvloader.h"
 
 #define DEBUG
 
+/**
+ * main
+ * ----
+ * Main entry point of the application
+ *
+ */
 int main(int argc, char **argv) {
 
   char *fn;

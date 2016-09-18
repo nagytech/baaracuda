@@ -1,4 +1,5 @@
-#define TPB                           128
+#ifndef _RUNNER_H_
+#define _RUNNER_H_
 
 #define ERR_CALC_FAIL_M               "Device kernel failed: %s\n"
 #define ERR_OOM_DEVICE_M              "Device out of memory: %s\n"
@@ -13,3 +14,5 @@ int do_ami(DATA_T *data, DATA_T *ami, int x, int y);
 int do_calcs(DATA_T *data, DATA_T *mag, DATA_T *ami, DATA_T *dev, DATA_T *avg);
 int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y);
 int do_mag(DATA_T *data, DATA_T *mag, int x, int y);
+
+#endif

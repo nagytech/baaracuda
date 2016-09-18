@@ -1,4 +1,17 @@
-/* TODO: More in depth error checking */
+/**
+ * runner.cpp
+ * ----------
+ *
+ * Author: Jonathan Nagy <jnagy@myune.edu.au>
+ * Date:   18 Sep 2016
+ * Description:
+ *
+ *    Orchestrates the execution and error checking of the CUDA kernels
+ *
+ * TODO: More in depth error checking, get the actual error codes and output
+ * CUDA error messages.
+ *
+ * ------------------------------------------------------------------------ */
 
 int do_mag(DATA_T *data, DATA_T *mag, int x, int y) {
 
