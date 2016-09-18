@@ -12,16 +12,16 @@
  *
  * Description:
  *
- *    This application performs multiple statistical calculations in paralell using
- * a GPU via CUDA.  The input CSV can be a variably sized dataset within the
- * constraints set byt he const.h file.
+ *    This application performs multiple statistical calculations in paralell
+ * using a GPU via CUDA.  The input CSV can be a variably sized dataset within
+ * the constraints set byt he const.h file.
  *
- *    Output will be written to stdio, which can then be redirected or piped to any
- * other location.
+ *    Output will be written to stdio, which can then be redirected or piped to
+ * any other location.
  *
- *    In order to compile and run, it requires a CUDA compatible NVIDIA graphics.
- * It will also require the CUDA SDK installed for any further development
- * purposes.
+ *    In order to compile and run, it requires a CUDA compatible NVIDIA
+ * graphics. It will also require the CUDA SDK installed for any further
+ * development purposes.
  *
  * ------------------------------------------------------------------------ */
 

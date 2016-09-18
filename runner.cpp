@@ -9,21 +9,35 @@
  *    Orchestrates the execution and error checking of the CUDA kernels
  *
  * TODO: More in depth error checking, get the actual error codes and output
- * CUDA error messages.
+ *       CUDA error messages.
  *
  * ------------------------------------------------------------------------ */
 
+/**
+ * do_mag
+ * ------
+ * Performs the signalMagnitude calculations
+ *
+ * @param  data input dataset
+ * @param  mag  output
+ * @param  x    width of dataset (columns)
+ * @param  y    length of dataset (rows)
+ *
+ * @return      cudaSuccess or other
+ */
 int do_mag(DATA_T *data, DATA_T *mag, int x, int y) {
 
   int e;
   DATA_T *d_mag = NULL;
 
+  /* Allocate device memory */
   e = cudaMalloc((void **)&d_mag, y * ct_size);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_MAG);
     return e;
   }
 
+  /* Perform calculations */
   e = signalMagnitude<<<bpg_multi, TPB>>>(d_mag, d_arr, x, y);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_CALC_FAIL_M, FUNC_T_MAG);
@@ -31,6 +45,7 @@ int do_mag(DATA_T *data, DATA_T *mag, int x, int y) {
     return e;
   }
 
+  /* Allocate host data */
   mag = (DATA_T *)calloc(y, ct_size);
   if (mag == NULL) {
     fprintf(stderr, ERR_OOM_HOST_M, FUNC_T_MAG);
@@ -38,6 +53,7 @@ int do_mag(DATA_T *data, DATA_T *mag, int x, int y) {
     return NULL;
   }
 
+  /* Copy device to host */
   e = cudaMemcpy(mag, d_mag, y * ct_size, dth);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_MEMCPY_FAILED, FUNC_T_MAG);
@@ -51,17 +67,31 @@ int do_mag(DATA_T *data, DATA_T *mag, int x, int y) {
   return e;
 }
 
+/**
+ * do_ami
+ * ------
+ * Performs the averageMovementIntensity calculations
+ *
+ * @param  data input dataset
+ * @param  ami  output
+ * @param  x    width of dataset (columns)
+ * @param  y    length of dataset (rows)
+ *
+ * @return      cudaSuccess or other
+ */
 int do_ami(DATA_T *data, DATA_T *ami, int x, int y) {
 
   int e;
   DATA_T *d_ami = NULL;
 
+  /* Allocate device memory */
   e = cudaMalloc((void **)&d_ami, y * ct_size);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_AMI);
     return e;
   }
 
+  /* Perform calculations */
   e = averageMovementIntensity<<<bpg_multi, TPB>>>(d_ami, d_arr, x, y);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_CALC_FAIL_M, FUNC_T_AMI);
@@ -69,6 +99,7 @@ int do_ami(DATA_T *data, DATA_T *ami, int x, int y) {
     return e;
   }
 
+  /* Allocate host memory */
   ami = (DATA_T *)calloc(y, ct_size);
   if (ami == NULL) {
     fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_AMI);
@@ -76,6 +107,7 @@ int do_ami(DATA_T *data, DATA_T *ami, int x, int y) {
     return NULL;
   }
 
+  /* Copy device to host */
   e = cudaMemcpy(ami, d_ami, y * ct_size, dth);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_MEMCPY_FAILED, FUNC_T_AMI);
@@ -90,17 +122,30 @@ int do_ami(DATA_T *data, DATA_T *ami, int x, int y) {
 
 }
 
+/**
+ * do_dev
+ * ------
+ * Performs the standardDeviation calculations (including mean)
+ *
+ * @param  data input dataset
+ * @param  dev  output for standardDeviation
+ * @param  avg  output for average
+ * @param  x    width of dataset (columns)
+ * @param  y    length of dataset (rows)
+ *
+ * @return      cudaSuccess or other
+ */
 int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y) {
 
   int e;
   DATA_T *d_dev = NULL, *d_avg = NULL, *dev = NULL, *avg = NULL;
 
+  /* Allocate device memory */
   e = cudaMalloc((void **)&d_dev, x * y * ct_size);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_DEV);
     return e;
   }
-
   e = cudaMalloc((void **)&d_avg, x * y * ct_size);
   if (e != cudaSuccess) {
     cudaFree(d_dev);
@@ -108,6 +153,7 @@ int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y) {
     return e;
   }
 
+  /* Perform calculations */
   standardDeviation<<<bpg_singl, TPB>>>(d_dev, d_avg, d_arr, x, y, x * y);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_CALC_FAIL_M, FUNC_T_DEV);
@@ -116,6 +162,7 @@ int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y) {
     return e;
   }
 
+  /* Allocate host memory */
   dev = (DATA_T *)calloc(x * y, ct_size);
   if (dev == NULL) {
     fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_DEV);
@@ -123,7 +170,6 @@ int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y) {
     cudaFree(d_avg);
     return NULL;
   }
-
   avg = (DATA_T *)calloc(x * y, ct_size);
   if (avg == NULL) {
     fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_DEV);
@@ -133,6 +179,7 @@ int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y) {
     return NULL;
   }
 
+  /* Copy host to device */
   e = cudaMemcpy(dev, d_dev, x * y * ct_size, dth);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_CALC_FAIL_M, FUNC_T_DEV);
@@ -142,7 +189,6 @@ int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y) {
     cudaFree(d_avg);
     return e;
   }
-
   e = cudaMemcpy(avg, d_avg, x * y * ct_size, dth);
   if (e != cudaSuccess) {
     fprintf(stderr, ERR_CALC_FAIL_M, FUNC_T_DEV);
@@ -160,6 +206,20 @@ int do_dev(DATA_T *data, DATA_T *dev, DATA_T *avg, int x, int y) {
 
 }
 
+/**
+ * do_calcs
+ * --------
+ *
+ * Orchestrates the CUDA kernel execution for all calculations
+ *
+ * @param  data input data
+ * @param  mag  magnitude output
+ * @param  ami  averageMovementIntensity output
+ * @param  dev  standardDeviation output
+ * @param  avg  standardDeviation output (mean)
+ *
+ * @return      success or failure
+ */
 int do_calcs(DATA_T *data, DATA_T *mag, DATA_T *ami, DATA_T *dev, DATA_T *avg) {
 
   size_t ct_size;

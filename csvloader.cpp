@@ -16,7 +16,8 @@
 #define READ_CSV_OK                  0
 #define ERR_MAX_COL_EXCEEDED        -1
 #define ERR_MAX_COL_EXCEEDED_M      \
-  "Maximum allowable column size exceeded.  Line %d has %d columns, maximum %d\n"
+  "Maximum allowable column size exceeded.  Line %d has %d columns, \
+  maximum %d\n"
 #define ERR_MAX_ROW_EXCEEDED_M      \
   "Maximum row count exceeded: found %d, maximum %d\n"
 #define ERR_ROW_NOT_FOUND_M         \
