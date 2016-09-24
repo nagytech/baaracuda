@@ -185,7 +185,7 @@ void minmax(
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     /* Filter over-allocated threads, but ignore last (window - 1) records */
     if (i + (WINDOW * x) < xy) {
-      int j;
+      int j = 0;
       DATA_T val, mn, mx;
       mn = mx = val = arr[i + (j * x)];
       for (j = 1; j <= WINDOW; j++) {

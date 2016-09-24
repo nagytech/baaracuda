@@ -1,0 +1,233 @@
+Assignment Submission
+       Unit: cosc330
+ Assignment: a4
+       User: jnagy
+     Who is:
+       Date: Sat Sep 24 16:08:10 AEST 2016
+----------------------------------------------------------------
+Files submitted:
+-rw------- 1 jnagy jnagy 1.4K Sep 24 15:39 const.h
+-rw------- 1 jnagy jnagy 8.0K Sep 18 13:24 csvloader.cpp
+-rw------- 1 jnagy jnagy  171 Sep 18 13:23 csvloader.h
+-rw------- 1 jnagy jnagy 5.9K Sep 24 16:04 kernels.cu
+-rw------- 1 jnagy jnagy  560 Sep 24 15:34 kernels.h
+-rw-rw-r-- 1 jnagy jnagy 3.1K Sep 24 15:38 main.cu
+-rw------- 1 jnagy jnagy  504 Sep 18 12:56 makefile
+-rw-rw-r-- 1 jnagy jnagy  14M Sep 24 16:05 out.csv
+-rwxr--r-- 1 jnagy jnagy   31 Sep 15 09:22 run
+-rwxr--r-- 1 jnagy jnagy   28 Sep 18 13:33 run_4_col
+-rw------- 1 jnagy jnagy 8.0K Sep 24 15:57 runner.cu
+-rw------- 1 jnagy jnagy 1.2K Sep 24 15:48 runner.h
+-rw-rw-r-- 1 jnagy jnagy 1.7K Sep 17 14:54 sheep_4_col.csv
+----------------------------------------------------------------
+Script of session:
+Script started on Sat 24 Sep 2016 16:05:09 AEST
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ssh bourbaki
+ccLast login: Sat Sep 24 16:04:33 2016 from 180.181.109.199
+d c[0;30;42mUNE[m [0;37mjnagy[m:[1;32m~[m $ cd cosc330/a4
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ls -al
+total 1660
+drwxrwxr-x. 3 jnagy jnagy    4096 Sep 24 16:04 [0m[01;34m.[0m
+drwxrwxr-x. 8 jnagy jnagy     103 Sep 15 20:54 [01;34m..[0m
+-rw-------. 1 jnagy jnagy    1425 Sep 24 15:39 const.h
+-rw-------. 1 jnagy jnagy    8160 Sep 18 13:24 csvloader.cpp
+-rw-------. 1 jnagy jnagy     171 Sep 18 13:23 csvloader.h
+drwx------. 8 jnagy jnagy     257 Sep 24 16:02 [01;34m.git[0m
+-rw-------. 1 jnagy jnagy      27 Sep 17 14:55 .gitignore
+-rw-------. 1 jnagy jnagy    5950 Sep 24 16:04 kernels.cu
+-rw-------. 1 jnagy jnagy     560 Sep 24 15:34 kernels.h
+-rw-rw-r--. 1 jnagy jnagy    3127 Sep 24 15:38 main.cu
+-rw-------. 1 jnagy jnagy     504 Sep 18 12:56 makefile
+-rwxr--r--. 1 jnagy jnagy      31 Sep 15 09:22 [01;32mrun[0m
+-rwxr--r--. 1 jnagy jnagy      28 Sep 18 13:33 [01;32mrun_4_col[0m
+-rw-------. 1 jnagy jnagy    8176 Sep 24 15:57 runner.cu
+-rw-------. 1 jnagy jnagy    1181 Sep 24 15:48 runner.h
+-rw-rw-r--. 1 jnagy jnagy    1665 Sep 17 14:54 sheep_4_col.csv
+-rw-------. 1 jnagy jnagy 1619013 Sep 12 10:27 sheep_imu_data.csv
+-rw-r-----. 1 jnagy jnagy    6764 Sep 18 13:39 submit.20160918
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat makefile 
+COMPILER = nvcc
+CFLAGS = --compiler-options -Wall #-I /usr/local/cuda-7.5/samples/common/inc -std=c++11
+OBJECTS = csvloader.o kernels.o runner.o
+EXES = baaracuda
+
+all: ${EXES}
+
+csvloader.o: csvloader.cpp
+	${COMPILER} ${CFLAGS} -c csvloader.cpp
+
+runner.o: runner.cu kernels.o
+	${COMPILER} ${CFLAGS} -c runner.cu kernels.o
+
+kernels.o: kernels.cu
+	${COMPILER} ${CFLAGS} -c kernels.cu
+
+baaracuda: main.cu ${OBJECTS}
+	${COMPILER} ${CFLAGS} main.cu ${OBJECTS} -o baaracuda
+
+clean:
+	rm -f *~ ${EXES} ${OBJECTS}
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat r[D[K[D[K[D[K[D[K[D[Kmake
+nvcc --compiler-options -Wall  -c csvloader.cpp
+nvcc --compiler-options -Wall  -c kernels.cu
+nvcc --compiler-options -Wall  -c runner.cu kernels.o
+nvcc --compiler-options -Wall  main.cu csvloader.o kernels.o runner.o -o baaracuda
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat run
+./baaracuda sheep_imu_data.csv
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ./run > out.sc[D[K[D[Kcsv
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat out.csv | head -n 5
+ID,INPUT_1,INPUT_2,INPUT_3,MAG,AMI,STDEV_1,STDEV_2,STDEV_3,MEAN_1,MEAN_2,MEAN_3,MIN_1,MIN_2,MIN_3,MAX_1,MAX_2,MAX_3
+0,-114,-140,971,1228,973539,0.00000916,0.00001221,0.00013428,-107.08,-152.56,968.84,-116,-167,954,-98,-129,980
+1,-106,-152,980,1227,973145,0.00001068,0.00000916,0.00004883,-106.76,-151.92,968.76,-116,-167,954,-98,-124,980
+2,-98,-134,965,1228,971630,0.00000916,0.00002747,0.00006104,-107.08,-152.76,967.80,-116,-173,954,-98,-124,978
+3,-106,-142,974,1229,972578,0.00000916,0.00000610,0.00002441,-107.92,-153.28,968.12,-119,-173,954,-100,-124,978
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat out.csv | head -n 5[D[D[D[D[D[D[1P[D[1P[D[1P[D[1P[1@t[1@a[1@i[1@l
+125697,-256,-104,994,1387,1093567,0.00001526,0.00004883,0.00001221,-80.52,-326.40,966.44,-358,-620,668,46,68,1108
+125698,-358,-220,956,1376,1073838,0.00003662,0.00001221,0.00006104,-67.40,-335.28,953.80,-358,-620,668,72,68,1108
+125699,-316,-185,947,1368,1072328,0.00003357,0.00001221,0.00003662,-53.32,-342.56,953.32,-316,-620,668,72,68,1108
+125700,-193,-158,1045,1370,1073916,0.00003815,0.00012817,0.00003662,-41.96,-361.08,947.68,-218,-648,668,72,68,1108
+125701,-218,-68,1032,1375,1073042,0.00000229,0.00007324,0.00013428,-35.20,-385.64,935.16,-218,-772,668,72,68,1108
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat sheep_4_col.csv 
+-114,-140,971,97
+-106,-152,980,98
+-98,-134,965,96
+-106,-142,974,97
+-101,-157,975,97
+-110,-148,965,96
+-108,-154,970,97
+-114,-153,967,96
+-108,-166,974,97
+-104,-154,974,97
+-102,-158,974,97
+-111,-153,966,96
+-106,-155,973,97
+-105,-157,964,96
+-104,-160,954,95
+-106,-156,977,97
+-103,-157,970,97
+-114,-166,972,97
+-100,-152,960,96
+-111,-129,969,96
+-104,-157,959,95
+-112,-140,968,96
+-104,-152,978,97
+-116,-155,961,96
+-110,-167,961,96
+-106,-124,969,96
+-114,-173,956,95
+-119,-147,973,97
+-104,-156,972,97
+-314,-162,944,94
+-160,-150,984,98
+-48,-110,962,96
+-37,-101,1001,100
+-42,-108,948,94
+-54,-80,994,99
+-164,-116,956,95
+-148,-96,978,97
+-136,-114,970,97
+-107,-117,962,96
+-121,-129,985,98
+-115,-112,973,97
+-127,-111,969,96
+-117,-110,963,96
+-119,-124,970,97
+-128,-104,963,96
+-130,-114,974,97
+-124,-87,975,97
+-120,-119,970,97
+-129,-104,975,97
+-127,-99,967,96
+-117,-103,962,96
+-130,-120,972,97
+-111,-94,969,96
+-123,-104,988,98
+-120,-82,982,98
+-124,-112,968,96
+-125,-100,964,96
+-123,-104,979,97
+-111,-112,947,94
+-129,-111,986,98
+-123,-109,963,96
+-125,-100,990,99
+-118,-105,964,96
+-124,-109,968,96
+-118,-115,963,96
+-121,-103,969,96
+-128,-118,969,96
+-130,-107,960,96
+-122,-82,984,98
+-128,-124,968,96
+-133,-106,970,97
+-117,-114,967,96
+-118,-98,978,97
+-125,-99,972,97
+-131,-101,982,98
+-127,-86,969,96
+-142,-92,989,98
+-119,-94,951,95
+-139,-105,965,96
+-136,-81,968,96
+-133,-103,970,97
+-130,-91,988,98
+-128,-90,974,97
+-134,-97,979,97
+-127,-92,967,96
+-130,-96,968,96
+-122,-92,964,96
+-136,-83,990,99
+-126,-87,971,97
+-138,-87,967,96
+-133,-93,974,97
+-129,-91,956,95
+-140,-95,974,97
+-131,-90,969,96
+-132,-90,975,97
+-118,-89,960,96
+-143,-93,972,97
+-128,-80,962,96
+-132,-94,974,97
+-136,-78,968,96
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat run
+run        run_4_col  runner.cu  runner.h   runner.o   
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat run_4_col 
+./baaracuda sheep_4_col.csv
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ./run_4_col | head -n 5
+ID,INPUT_1,INPUT_2,INPUT_3,INPUT_4,MAG,AMI,STDEV_1,STDEV_2,STDEV_3,STDEV_4,MEAN_1,MEAN_2,MEAN_3,MEAN_4,MIN_1,MIN_2,MIN_3,MIN_4,MAX_1,MAX_2,MAX_3,MAX_4
+0,-114,-140,971,97,1325,982848,0.00000916,0.00001221,0.00013428,0.00001678,-107.08,-152.56,968.84,96.48,-116,-167,954,95,-98,-129,980,98
+1,-106,-152,980,98,1324,982446,0.00001068,0.00000916,0.00004883,0.00001221,-106.76,-151.92,968.76,96.44,-116,-167,954,95,-98,-124,980,98
+2,-98,-134,965,96,1324,980908,0.00000916,0.00002747,0.00006104,0.00000153,-107.08,-152.76,967.80,96.32,-116,-173,954,95,-98,-124,978,97
+3,-106,-142,974,97,1326,981864,0.00000916,0.00000610,0.00002441,0.00000305,-107.92,-153.28,968.12,96.36,-119,-173,954,95,-100,-124,978,97
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ c[D[Kexit
+logout
+Connection to bourbaki closed.
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ls -al
+total 16100
+drwxrwxr-x 3 jnagy jnagy     4096 Sep 24 16:05 [0m[00;34m.[0m
+drwxrwxr-x 8 jnagy jnagy      103 Sep 15 20:54 [00;34m..[0m
+-rwxrwxr-x 1 jnagy jnagy   557391 Sep 24 16:05 [00;32mbaaracuda[0m
+-rw------- 1 jnagy jnagy     1425 Sep 24 15:39 const.h
+-rw------- 1 jnagy jnagy     8160 Sep 18 13:24 csvloader.cpp
+-rw------- 1 jnagy jnagy      171 Sep 18 13:23 csvloader.h
+-rw-rw-r-- 1 jnagy jnagy     6456 Sep 24 16:05 csvloader.o
+drwx------ 8 jnagy jnagy      257 Sep 24 16:02 [00;34m.git[0m
+-rw------- 1 jnagy jnagy       27 Sep 17 14:55 .gitignore
+-rw------- 1 jnagy jnagy     5950 Sep 24 16:04 kernels.cu
+-rw------- 1 jnagy jnagy      560 Sep 24 15:34 kernels.h
+-rw-rw-r-- 1 jnagy jnagy    24984 Sep 24 16:05 kernels.o
+-rw-rw-r-- 1 jnagy jnagy     3127 Sep 24 15:38 main.cu
+-rw------- 1 jnagy jnagy      504 Sep 18 12:56 makefile
+-rw-rw-r-- 1 jnagy jnagy 14169397 Sep 24 16:05 out.csv
+-rwxr--r-- 1 jnagy jnagy       31 Sep 15 09:22 [00;32mrun[0m
+-rwxr--r-- 1 jnagy jnagy       28 Sep 18 13:33 [00;32mrun_4_col[0m
+-rw------- 1 jnagy jnagy     8176 Sep 24 15:57 runner.cu
+-rw------- 1 jnagy jnagy     1181 Sep 24 15:48 runner.h
+-rw-rw-r-- 1 jnagy jnagy    13216 Sep 24 16:05 runner.o
+-rw-rw-r-- 1 jnagy jnagy     1665 Sep 17 14:54 sheep_4_col.csv
+-rw------- 1 jnagy jnagy  1619013 Sep 12 10:27 sheep_imu_data.csv
+-rw-r----- 1 jnagy jnagy     6764 Sep 18 13:39 submit.20160918
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ exit
+exit
+
+Script done on Sat 24 Sep 2016 16:06:58 AEST
+8968
