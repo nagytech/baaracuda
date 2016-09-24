@@ -22,4 +22,9 @@ void standardDeviation(
   DATA_T *dev, DATA_T *avg, const DATA_T *arr,
   int x, int y, int xy);
 
+__global__
+void minmax(
+  DATA_T *min, DATA_T *max, const DATA_T *arr,
+  int x, int y, int xy);
+
 #endif /* _KERNELS_H_ */

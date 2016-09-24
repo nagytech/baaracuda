@@ -23,9 +23,9 @@
  * graphics. It will also require the CUDA SDK installed for any further
  * development purposes.
  *
- * TODO: To be more efficient, we may want to have the kernels execute the 
+ * TODO: To be more efficient, we may want to have the kernels execute the
  * rudimentary calculations for each feature prior to the major functions (ie.
- * it would be easier to compute |x| for each feature rather than iterating 
+ * it would be easier to compute |x| for each feature rather than iterating
  * 'n' times for each window element.
  *
  * ------------------------------------------------------------------------ */
@@ -50,7 +50,8 @@ int main(int argc, char **argv) {
   char *fn;
   int x, y;
   DATA_T *data = NULL;
-  DATA_T *mag = NULL, *ami = NULL, *dev = NULL, *avg = NULL;
+  DATA_T *mag = NULL, *ami = NULL, *dev = NULL, *avg = NULL,
+    *min = NULL, *max = NULL;
 
   fn = argv[1];
 
@@ -63,7 +64,8 @@ int main(int argc, char **argv) {
 
   cudaThreadSynchronize();
 
-  if (do_calcs(data, &mag, &ami, &dev, &avg, x, y) != EXIT_SUCCESS) {
+  if (do_calcs(data, &mag, &ami, &dev, &avg, &min, &max,
+    x, y) != EXIT_SUCCESS) {
     fprintf(stderr, "Failed to perform one or more calculations\n");
     if (data != NULL)
       free(data);
@@ -79,6 +81,10 @@ int main(int argc, char **argv) {
     fprintf(stdout, ",STDEV_%d", r);
   for (int r = 1; r <= x; r++)
     fprintf(stdout, ",MEAN_%d", r);
+  for (int r = 1; r <= x; r++)
+    fprintf(stdout, ",MIN_%d", r);
+  for (int r = 1; r <= x; r++)
+    fprintf(stdout, ",MAX_%d", r);
   fprintf(stdout, "\n");
   for (int q = 0; q < y - WINDOW; q++) {
     fprintf(stdout, "%d", q);
@@ -90,6 +96,10 @@ int main(int argc, char **argv) {
       fprintf(stdout, OUT_FORMAT_STD, dev[(q * x) + r]);
     for (int r = 0; r < x; r++)
       fprintf(stdout, OUT_FORMAT_AVG, avg[(q * x) + r]);
+    for (int r = 0; r < x; r++)
+      fprintf(stdout, OUT_FORMAT_MIN, min[(q * x) + r]);
+    for (int r = 0; r < x; r++)
+      fprintf(stdout, OUT_FORMAT_MAX, max[(q * x) + r]);
     fprintf(stdout, "\n");
   }
 
@@ -99,6 +109,8 @@ int main(int argc, char **argv) {
   free(ami);
   free(dev);
   free(avg);
+  free(min);
+  free(max);
 
   return EXIT_SUCCESS;
 

@@ -26,6 +26,8 @@
 #define OUT_FORMAT_AMI              ",%.0f"
 #define OUT_FORMAT_AVG              ",%0.2f"
 #define OUT_FORMAT_STD              ",%0.8f"
+#define OUT_FORMAT_MIN              ",%.0f"
+#define OUT_FORMAT_MAX              ",%.0f"
 #define WINDOW                      25            /* Sliding window width */
 
 /*

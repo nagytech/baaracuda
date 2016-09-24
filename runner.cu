@@ -207,6 +207,88 @@ int do_dev(DATA_T *d_arr, DATA_T **dev, DATA_T **avg, int x, int y) {
 }
 
 /**
+ * do_minmax
+ * ---------
+ * Calculates the min and max of the sliding window for the input dataset
+ * features.
+ *
+ * @param  d_arr input data array
+ * @param  min   output minimum data array
+ * @param  max   output maximum data array
+ * @param  x     dataset width
+ * @param  y     dataset length
+ *
+ * @return       success or failure
+ */
+int do_minmax(DATA_T *d_arr, DATA_T **min, DATA_T **max, int x, int y) {
+
+  int e, bpg_singl;
+  DATA_T *d_min = NULL, *d_max = NULL;
+
+  /* Set block limit */
+  bpg_singl = ((x * y) + TPB - 1) / TPB;
+
+  /* Allocate device memory */
+  e = cudaMalloc((void **)&d_min, x * y * sizeof(DATA_T));
+  if (e != cudaSuccess) {
+    fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_MIN);
+    return e;
+  }
+  e = cudaMalloc((void **)&d_max, x * y * sizeof(DATA_T));
+  if (e != cudaSuccess) {
+    cudaFree(d_min);
+    fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_MAX);
+    return e;
+  }
+
+  /* Perform calculations */
+  minmax<<<bpg_singl, TPB>>>(d_min, d_max, d_arr, x, y, x * y);
+
+  /* Allocate host memory */
+  *min = (DATA_T *)calloc(x * y, sizeof(DATA_T));
+  if (*min == NULL) {
+    fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_MIN);
+    cudaFree(d_min);
+    cudaFree(d_max);
+    return -1;
+  }
+  *max = (DATA_T *)calloc(x * y, sizeof(DATA_T));
+  if (*max == NULL) {
+    fprintf(stderr, ERR_OOM_DEVICE_M, FUNC_T_MAX);
+    free(*min);
+    cudaFree(d_min);
+    cudaFree(d_max);
+    return -1;
+  }
+
+  /* Copy host to device */
+  e = cudaMemcpy(*min, d_min, x * y * sizeof(DATA_T), DTH);
+  if (e != cudaSuccess) {
+    fprintf(stderr, ERR_CALC_FAIL_M, FUNC_T_MIN);
+    free(*min);
+    free(*max);
+    cudaFree(d_min);
+    cudaFree(d_max);
+    return e;
+  }
+  e = cudaMemcpy(*max, d_max, x * y * sizeof(DATA_T), DTH);
+  if (e != cudaSuccess) {
+    fprintf(stderr, ERR_CALC_FAIL_M, FUNC_T_MAX);
+    free(*min);
+    free(*max);
+    cudaFree(d_min);
+    cudaFree(d_max);
+    return e;
+  }
+
+  cudaFree(d_min);
+  cudaFree(d_max);
+
+  return e;
+
+}
+
+/**
  * do_calcs
  * --------
  *
@@ -220,8 +302,8 @@ int do_dev(DATA_T *d_arr, DATA_T **dev, DATA_T **avg, int x, int y) {
  *
  * @return      success or failure
  */
-int do_calcs(DATA_T *data, DATA_T **mag, DATA_T **ami, DATA_T **dev, DATA_T **avg,
-  int x, int y) {
+int do_calcs(DATA_T *data, DATA_T **mag, DATA_T **ami, DATA_T **dev,
+  DATA_T **avg, DATA_T **min, DATA_T **max, int x, int y) {
 
   int e;
   DATA_T *d_arr = NULL;
@@ -250,6 +332,12 @@ int do_calcs(DATA_T *data, DATA_T **mag, DATA_T **ami, DATA_T **dev, DATA_T **av
 
   /* Perform the standardDeviation / mean calculation */
   if (do_dev(d_arr, dev, avg, x, y) != cudaSuccess) {
+    cudaFree(d_arr);
+    return EXIT_FAILURE;
+  }
+
+  /* Perform the min max calculations */
+  if (do_minmax(d_arr, min, max, x, y) != cudaSuccess) {
     cudaFree(d_arr);
     return EXIT_FAILURE;
   }

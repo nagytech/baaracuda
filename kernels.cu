@@ -162,3 +162,38 @@ void standardDeviation(
     dev[i] = 0;
   }
 }
+
+__global__
+/**
+ * minmax
+ * ------
+ * Calculates the minimum and maximum values for each feature of the
+ * input dataset.
+ *
+ * @param min array of output values representing minimum value of sliding
+ * window (row major order)
+ * @param max array of output values representign maximum value of sliding
+ * window (column major order)
+ * @param arr input array, row major order
+ * @param x   width of data
+ * @param y   length of data
+ */
+void minmax(
+  DATA_T *min, DATA_T *max, const DATA_T *arr,
+  int x, int y, int xy) {
+
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    /* Filter over-allocated threads, but ignore last (window - 1) records */
+    if (i + (WINDOW * x) < xy) {
+      int j;
+      DATA_T val, mn, mx;
+      mn = mx = val = arr[i + (j * x)];
+      for (j = 1; j <= WINDOW; j++) {
+        if (mn > val) mn = val;
+        if (mx < val) mx = val;
+        val = arr[i + (j * x)];
+      }
+      min[i] = mn;
+      max[i] = mx;
+    }
+  }
