@@ -1,1 +1,1 @@
-nvprof --profile-child-processes ./run > out.csv2
+nvprof --profile-child-processes ./run > /dev/null
