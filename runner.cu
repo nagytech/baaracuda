@@ -34,11 +34,12 @@
  */
 int do_mag(DATA_T *d_arr, DATA_T **mag, int x, int y) {
 
-  int e, bpg_multi;
+  int e, bpg_multi, sh_msize;
   DATA_T *d_mag = NULL;
 
   /* Set block limit */
   bpg_multi = (y + TPB - 1) / TPB;
+  sh_msize = sizeof(DATA_T) * (TPB + WINDOW) * x;
 
   /* Allocate device memory */
   e = cudaMalloc((void **)&d_mag, y * sizeof(DATA_T));
@@ -48,7 +49,7 @@ int do_mag(DATA_T *d_arr, DATA_T **mag, int x, int y) {
   }
 
   /* Perform calculations */
-  signalMagnitude<<<bpg_multi, TPB>>>(d_mag, d_arr, x, y);
+  signalMagnitude<<<bpg_multi, TPB, sh_msize>>>(d_mag, d_arr, x, y);
 
   /* Allocate host data */
   *mag = (DATA_T *)calloc(y, sizeof(DATA_T));
@@ -86,11 +87,12 @@ int do_mag(DATA_T *d_arr, DATA_T **mag, int x, int y) {
  */
 int do_ami(DATA_T *d_arr, DATA_T **ami, int x, int y) {
 
-  int e, bpg_multi;
+  int e, bpg_multi, sh_msize;
   DATA_T *d_ami = NULL;
 
   /* Set block limit */
   bpg_multi = (y + TPB - 1) / TPB;
+  sh_msize = sizeof(DATA_T) * (TPB + WINDOW) * x;
 
   /* Allocate device memory */
   e = cudaMalloc((void **)&d_ami, y * sizeof(DATA_T));
@@ -100,7 +102,7 @@ int do_ami(DATA_T *d_arr, DATA_T **ami, int x, int y) {
   }
 
   /* Perform calculations */
-  averageMovementIntensity<<<bpg_multi, TPB>>>(d_ami, d_arr, x, y);
+  averageMovementIntensity<<<bpg_multi, TPB, sh_msize>>>(d_ami, d_arr, x, y);
 
   /* Allocate host memory */
   *ami = (DATA_T *)calloc(y, sizeof(DATA_T));
@@ -140,11 +142,12 @@ int do_ami(DATA_T *d_arr, DATA_T **ami, int x, int y) {
  */
 int do_dev(DATA_T *d_arr, DATA_T **dev, DATA_T **avg, int x, int y) {
 
-  int e, bpg_singl;
+  int e, bpg_singl, sh_msize;
   DATA_T *d_dev = NULL, *d_avg = NULL;
 
   /* Set block limit */
   bpg_singl = ((x * y) + TPB - 1) / TPB;
+  sh_msize = sizeof(DATA_T) * (TPB + WINDOW) * x;
 
   /* Allocate device memory */
   e = cudaMalloc((void **)&d_dev, x * y * sizeof(DATA_T));
@@ -160,7 +163,8 @@ int do_dev(DATA_T *d_arr, DATA_T **dev, DATA_T **avg, int x, int y) {
   }
 
   /* Perform calculations */
-  standardDeviation<<<bpg_singl, TPB>>>(d_dev, d_avg, d_arr, x, y, x * y);
+  standardDeviation<<<bpg_singl, TPB, sh_msize>>>
+    (d_dev, d_avg, d_arr, x, y, x * y);
 
   /* Allocate host memory */
   *dev = (DATA_T *)calloc(x * y, sizeof(DATA_T));
@@ -222,11 +226,12 @@ int do_dev(DATA_T *d_arr, DATA_T **dev, DATA_T **avg, int x, int y) {
  */
 int do_minmax(DATA_T *d_arr, DATA_T **min, DATA_T **max, int x, int y) {
 
-  int e, bpg_singl;
+  int e, bpg_singl, sh_msize;
   DATA_T *d_min = NULL, *d_max = NULL;
 
   /* Set block limit */
   bpg_singl = ((x * y) + TPB - 1) / TPB;
+  sh_msize = sizeof(DATA_T) * (TPB + WINDOW) * x;
 
   /* Allocate device memory */
   e = cudaMalloc((void **)&d_min, x * y * sizeof(DATA_T));
@@ -242,7 +247,7 @@ int do_minmax(DATA_T *d_arr, DATA_T **min, DATA_T **max, int x, int y) {
   }
 
   /* Perform calculations */
-  minmax<<<bpg_singl, TPB>>>(d_min, d_max, d_arr, x, y, x * y);
+  minmax<<<bpg_singl, TPB, sh_msize>>>(d_min, d_max, d_arr, x, y, x * y);
 
   /* Allocate host memory */
   *min = (DATA_T *)calloc(x * y, sizeof(DATA_T));

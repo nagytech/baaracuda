@@ -46,24 +46,54 @@
  * y:     height of data array
  *
  */
-__global__
-void signalMagnitude(
-  DATA_T *ans, const DATA_T *arr, int x, int y) {
+__global__ void signalMagnitude(DATA_T *ans, const DATA_T *arr, int x, int y) {
+
+  /* Derive data index */
   int i = blockDim.x * blockIdx.x + threadIdx.x;
+  int t = threadIdx.x;
+
+  /* Block shared memory */
+  extern __shared__ DATA_T sh[];
+
   /* Filter over-allocated threads, but ignore last (window - 1) records */
   if (i + WINDOW < y) {
+
     int j, k;
     DATA_T sig = 0;
-    /* Iterate through sliding window */
-    for (j = 0; j < WINDOW; j++) {
-      /* Iterate through columns within current window position */
-      for (k = 0; k < x; k++) {
-        /* Accumulate the signal strength */
-        sig += ABS_FUNC(arr[(x * (i + j)) + k]);
+
+    /* Set local prior to calcs */
+#pragma unroll
+    for (k = 0; k < x; k++) {
+      sh[t] = ABS_FUNC(arr[(x * i) + k]);
+    }
+
+    /* Overfill shared memory to account for overflowing window calcs */
+    if (t == 0)
+#pragma unroll
+    for (k = 0; k < x; k++) {
+#pragma unroll
+      for (j = 0; j < WINDOW; j++) {
+        sh[TPB + j] = ABS_FUNC(arr[(x * (TPB + j)) + k]);
       }
     }
+
+    /* Wait for thread 0 to finish with overflow */
+    __syncthreads();
+
+    /* Iterate through columns within current window position */
+#pragma unroll
+    for (k = 0; k < x; k++) {
+      /* Iterate through sliding window */
+#pragma unroll
+      for (j = 0; j < WINDOW; j++) {
+        /* Accumulate the signal strength */
+        sig += sh[(x * (t + j)) + k];
+      }
+    }
+
     /* Mean all values */
     ans[i] = sig / WINDOW;
+
   } else if (i < y) {
     /* Avoid a NULL reference */
     ans[i] = 0;
@@ -89,29 +119,61 @@ void signalMagnitude(
  * y:     height of data array
  *
  */
-__global__
-void averageMovementIntensity(
-  DATA_T *ans, const DATA_T *arr, int x, int y) {
+__global__ void averageMovementIntensity(DATA_T *ans, const DATA_T *arr,
+  int x, int y) {
+
+  /* Derive data index */
   int i = blockDim.x * blockIdx.x + threadIdx.x;
+  int t = threadIdx.x;
+
+  /* Block shared memory */
+  extern __shared__ DATA_T sh[];
+
   /* Filter over-allocated threads, but ignore last (window - 1) records */
   if (i + WINDOW < y) {
+
     int j, k;
-    DATA_T sig = 0;
-    /* Iterate through sliding window */
-    for (j = 0; j < WINDOW; j++) {
-      /* Iterate through columns within current window position */
-      for (k = 0; k < x; k++) {
-        /* Accumulate the intensity value */
-        int p = (x * (i + j)) + k;
-        sig += arr[p] * arr[p];
+
+    /* Set local prior to calcs */
+#pragma unroll
+    for (k = 0; k < x; k++) {
+      sh[t] = arr[(x * i) + k] * arr[(x * i) + k];
+    }
+
+    /* Overfill shared memory to account for overflowing window calcs */
+    if (t == 0)
+#pragma unroll
+    for (k = 0; k < x; k++) {
+#pragma unroll
+      for (j = 0; j < WINDOW; j++) {
+        sh[TPB + j] = arr[(x * (TPB + j)) + k] * arr[(x * (TPB + j)) + k];
       }
     }
+
+    /* Wait for thread 0 to finish with overflow */
+    __syncthreads();
+
+    DATA_T sig = 0;
+
+    /* Iterate through columns within current window position */
+#pragma unroll
+    for (k = 0; k < x; k++) {
+      /* Iterate through sliding window */
+#pragma unroll
+      for (j = 0; j < WINDOW; j++) {
+        /* Accumulate the intensity value */
+        sig += sh[(x * (t + j)) + k];
+      }
+    }
+
     /* Mean all values */
     ans[i] = sig / WINDOW;
+
   } else if (i < y) {
     /* Avoid a null reference */
     ans[i] = 0;
   }
+
 }
 
 /*
@@ -134,36 +196,70 @@ void averageMovementIntensity(
  * y:     height of data array
  *
  */
-__global__
-void standardDeviation(
-  DATA_T *dev, DATA_T *avg, const DATA_T *arr,
+__global__ void standardDeviation(DATA_T *dev, DATA_T *avg, const DATA_T *arr,
   int x, int y, int xy) {
+
+  /* Derive data index */
   int i = blockDim.x * blockIdx.x + threadIdx.x;
+  int t = threadIdx.x;
+
+  /* Block shared memory */
+  extern __shared__ DATA_T sh[];
+
   /* Filter over-allocated threads, but ignore last (window - 1) records */
   if (i + (WINDOW * x) < xy) {
-    int j;
+
+    int j, k;
+
+    /* Set local prior to calcs */
+#pragma unroll
+    for (k = 0; k < x; k++) {
+      sh[t] = arr[(x * i) + k];
+    }
+
+    /* Overfill shared memory to account for overflowing window calcs */
+    if (t == 0)
+#pragma unroll
+    for (j = 0; j < WINDOW; j++) {
+#pragma unroll
+      for (k = 0; k < x; k++) {
+        sh[TPB + j] = arr[(x * (TPB + j)) + k];
+      }
+    }
+
+    /* Wait for thread 0 to finish with overflow */
+    __syncthreads();
+
     DATA_T mean, sig, sum;
     sum = 0; sig = 0;
+
     /* Iterate through sliding window for summation */
+#pragma unroll
     for (j = 0; j < WINDOW; j++)
-      sum += arr[i + (j * x)];
+      sum += sh[t + (j * x)];
+
     mean = sum / WINDOW;
+
     /* Iterate through sliding for standard deviation */
+#pragma unroll
     for (int j = 0; j < WINDOW; j++)
-      sig += arr[i + (j * x)] - mean;
+      sig += sh[t + (j * x)] - mean;
+
     /* Calculate standard deviation */
     sig *= sig;
     sig /= WINDOW;
+
     avg[i] = mean;
     dev[i] = SQRT_FUNC(sig);
+
   } else if (i < xy) {
     /* Avoid NULL reference */
     avg[i] = 0;
     dev[i] = 0;
   }
+  
 }
 
-__global__
 /**
  * minmax
  * ------
@@ -178,22 +274,57 @@ __global__
  * @param x   width of data
  * @param y   length of data
  */
-void minmax(
-  DATA_T *min, DATA_T *max, const DATA_T *arr,
-  int x, int y, int xy) {
+__global__
+void minmax(DATA_T *min, DATA_T *max, const DATA_T *arr, int x, int y, int xy) {
 
+    /* Derive data indexes */
     int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int t = threadIdx.x;
+
+    /* Block shared memory */
+    extern __shared__ DATA_T sh[];
+
     /* Filter over-allocated threads, but ignore last (window - 1) records */
     if (i + (WINDOW * x) < xy) {
-      int j = 0;
-      DATA_T val, mn, mx;
-      mn = mx = val = arr[i + (j * x)];
-      for (j = 1; j <= WINDOW; j++) {
-        if (mn > val) mn = val;
-        if (mx < val) mx = val;
-        val = arr[i + (j * x)];
+
+      int j, k;
+      j = 0;
+
+      /* Set local prior to calcs */
+#pragma unroll
+      for (k = 0; k < x; k++) {
+        sh[t] = arr[(x * i) + k];
       }
-      min[i] = mn;
-      max[i] = mx;
+
+      /* Overfill shared memory to account for overflowing window calcs */
+      if (t == 0)
+#pragma unroll
+      for (j = 0; j < WINDOW; j++) {
+#pragma unroll
+        for (k = 0; k < x; k++) {
+          sh[TPB + j] = arr[(x * (TPB + j)) + k];
+        }
+      }
+
+      /* Wait for thread 0 to finish overloading */
+      __syncthreads();
+
+      DATA_T val, lmin, lmax;
+      val = lmin = lmax = sh[t + (j * x)];
+
+#pragma unroll
+      for (j = 1; j <= WINDOW; j++) {
+
+        lmin = fminf(lmin, val);
+        lmax = fmaxf(lmax, val);
+
+        val = sh[t + (j * x)];
+
+      }
+
+      min[i] = lmin;
+      max[i] = lmax;
+
     }
+
   }
