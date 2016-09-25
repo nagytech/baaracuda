@@ -31,13 +31,12 @@
  * ------------------------------------------------------------------------ */
 
 #include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
 #include <stdio.h>
 #include "const.h"
 #include "runner.h"
 #include "csvloader.h"
 
-#define DEBUG
-#define TRACE
 
 /**
  * main
@@ -62,7 +61,9 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  cudaThreadSynchronize();
+#ifdef PROFILE
+  cudaProfilerStart();
+#endif
 
   if (do_calcs(data, &mag, &ami, &dev, &avg, &min, &max,
     x, y) != EXIT_SUCCESS) {
@@ -71,6 +72,10 @@ int main(int argc, char **argv) {
       free(data);
     return EXIT_FAILURE;
   }
+
+#ifdef PROFILE
+  cudaProfilerStop();
+#endif
 
   /* Output the results */
   fprintf(stdout, "ID");
