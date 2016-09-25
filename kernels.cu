@@ -212,10 +212,7 @@ __global__ void standardDeviation(DATA_T *dev, DATA_T *avg, const DATA_T *arr,
     int j, k;
 
     /* Set local prior to calcs */
-#pragma unroll
-    for (k = 0; k < x; k++) {
-      sh[t] = arr[(x * i) + k];
-    }
+    sh[t] = arr[i];
 
     /* Overfill shared memory to account for overflowing window calcs */
     if (t == 0)
@@ -257,7 +254,7 @@ __global__ void standardDeviation(DATA_T *dev, DATA_T *avg, const DATA_T *arr,
     avg[i] = 0;
     dev[i] = 0;
   }
-  
+
 }
 
 /**
@@ -291,10 +288,7 @@ void minmax(DATA_T *min, DATA_T *max, const DATA_T *arr, int x, int y, int xy) {
       j = 0;
 
       /* Set local prior to calcs */
-#pragma unroll
-      for (k = 0; k < x; k++) {
-        sh[t] = arr[(x * i) + k];
-      }
+      sh[t] = arr[i];
 
       /* Overfill shared memory to account for overflowing window calcs */
       if (t == 0)
