@@ -1,0 +1,156 @@
+Assignment Submission
+       Unit: cosc330
+ Assignment: a4
+       User: jnagy
+     Who is:
+       Date: Sun Sep 25 18:04:27 AEST 2016
+----------------------------------------------------------------
+Files submitted:
+-rw------- 1 jnagy jnagy 1.4K Sep 25 17:40 cosc330/a4/const.h
+-rw------- 1 jnagy jnagy 8.0K Sep 18 13:24 cosc330/a4/csvloader.cpp
+-rw------- 1 jnagy jnagy  171 Sep 18 13:23 cosc330/a4/csvloader.h
+-rw------- 1 jnagy jnagy 8.1K Sep 25 17:51 cosc330/a4/kernels.cu
+-rw------- 1 jnagy jnagy  560 Sep 25 16:23 cosc330/a4/kernels.h
+-rw-rw-r-- 1 jnagy jnagy 3.2K Sep 25 15:08 cosc330/a4/main.cu
+-rw------- 1 jnagy jnagy  544 Sep 25 16:37 cosc330/a4/makefile
+-rw-rw-r-- 1 jnagy jnagy  10K Sep 25 18:01 cosc330/a4/out_4_col.csv
+-rw-rw-r-- 1 jnagy jnagy  14M Sep 25 18:01 cosc330/a4/out.csv
+-rwxr--r-- 1 jnagy jnagy   28 Sep 18 13:33 cosc330/a4/run_4_col
+-rw------- 1 jnagy jnagy 8.3K Sep 25 17:43 cosc330/a4/runner.cu
+-rw------- 1 jnagy jnagy 1.2K Sep 24 15:48 cosc330/a4/runner.h
+-rwxr--r-- 1 jnagy jnagy   51 Sep 25 17:09 cosc330/a4/run_profile
+-rw-rw-r-- 1 jnagy jnagy 1.7K Sep 17 14:54 cosc330/a4/sheep_4_col.csv
+----------------------------------------------------------------
+Script of session:
+Script started on Sun 25 Sep 2016 18:00:33 AEST
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32m~[m $ ssh bourbaki
+Last login: Sun Sep 25 18:00:17 2016 from turing.une.edu.au
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32m~[m $ cd cosc330/a4
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ls -al
+total 14660
+drwxrwxr-x. 3 jnagy jnagy     4096 Sep 25 18:00 [0m[01;34m.[0m
+drwxrwxr-x. 8 jnagy jnagy      103 Sep 15 20:54 [01;34m..[0m
+-rw-------. 1 jnagy jnagy     1425 Sep 25 17:40 const.h
+-rw-------. 1 jnagy jnagy     8160 Sep 18 13:24 csvloader.cpp
+-rw-------. 1 jnagy jnagy      171 Sep 18 13:23 csvloader.h
+drwx------. 8 jnagy jnagy      257 Sep 25 17:57 [01;34m.git[0m
+-rw-------. 1 jnagy jnagy       27 Sep 17 14:55 .gitignore
+-rw-------. 1 jnagy jnagy     8245 Sep 25 17:51 kernels.cu
+-rw-------. 1 jnagy jnagy      560 Sep 25 16:23 kernels.h
+-rw-rw-r--. 1 jnagy jnagy     3193 Sep 25 15:08 main.cu
+-rw-------. 1 jnagy jnagy      544 Sep 25 16:37 makefile
+-rw-rw-r--. 1 jnagy jnagy 13283818 Sep 25 17:16 out.csv
+-rwxr--r--. 1 jnagy jnagy       31 Sep 15 09:22 [01;32mrun[0m
+-rwxr--r--. 1 jnagy jnagy       28 Sep 18 13:33 [01;32mrun_4_col[0m
+-rw-------. 1 jnagy jnagy     8461 Sep 25 17:43 runner.cu
+-rw-------. 1 jnagy jnagy     1181 Sep 24 15:48 runner.h
+-rwxr--r--. 1 jnagy jnagy       51 Sep 25 17:09 [01;32mrun_profile[0m
+-rw-rw-r--. 1 jnagy jnagy     1665 Sep 17 14:54 sheep_4_col.csv
+-rw-------. 1 jnagy jnagy  1619013 Sep 12 10:27 sheep_imu_data.csv
+-rw-r-----. 1 jnagy jnagy     6764 Sep 18 13:39 submit.20160918
+-rw-r-----. 1 jnagy jnagy     8973 Sep 24 16:08 submit.20160924
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat makefile
+COMPILER = nvcc
+CFLAGS = --compiler-options -Wall#-I /usr/local/cuda-7.5/samples/common/inc -std=c++11
+OBJECTS = csvloader.o kernels.o runner.o
+EXES = baaracuda
+
+all: ${EXES}
+
+profile: CFLAGS+=-DPROFILE
+profile: all
+
+csvloader.o: csvloader.cpp
+	${COMPILER} ${CFLAGS} -c csvloader.cpp
+
+runner.o: runner.cu kernels.o
+	${COMPILER} ${CFLAGS} -c runner.cu kernels.o
+
+kernels.o: kernels.cu
+	${COMPILER} ${CFLAGS} -c kernels.cu
+
+baaracuda: main.cu ${OBJECTS}
+	${COMPILER} ${CFLAGS} main.cu ${OBJECTS} -o baaracuda
+
+clean:
+	rm -f *~ ${EXES} ${OBJECTS}
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ make clean && make
+rm -f *~ baaracuda csvloader.o kernels.o runner.o
+nvcc --compiler-options -Wall -c csvloader.cpp
+nvcc --compiler-options -Wall -c kernels.cu
+nvcc --compiler-options -Wall -c runner.cu kernels.o
+nvcc --compiler-options -Wall main.cu csvloader.o kernels.o runner.o -o baaracuda
+cat run	[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat run
+./baaracuda sheep_imu_data.csv
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ rm out.csv 
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ./run > out.csv
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat out.csv | head -n 5
+ID,INPUT_1,INPUT_2,INPUT_3,MAG,AMI,STDEV_1,STDEV_2,STDEV_3,MEAN_1,MEAN_2,MEAN_3,MIN_1,MIN_2,MIN_3,MAX_1,MAX_2,MAX_3
+0,-114,-140,971,2910,2823619,0.00000916,0.00001221,0.00013428,-107.08,-152.56,968.84,-116,-167,954,-98,-129,980
+1,-106,-152,980,2910,2823100,0.00001068,0.00000916,0.00004883,-106.76,-151.92,968.76,-116,-167,954,-98,-124,980
+2,-98,-134,965,2910,2822244,0.00000916,0.00002747,0.00006104,-107.08,-152.76,967.80,-116,-173,954,-98,-124,978
+3,-106,-142,974,2911,2824588,0.00000916,0.00000610,0.00002441,-107.92,-153.28,968.12,-119,-173,954,-100,-124,978
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat out.csv | tail -n 5
+125697,-256,-104,994,2938,3003303,0.00002441,0.00002289,0.00003662,-126.80,-99.24,986.32,-358,-316,-140,1214,85,1045
+125698,-358,-220,956,2945,3001952,0.00001678,0.00001831,0.00004883,-120.12,-98.20,986.24,-358,-316,-140,1214,85,1045
+125699,-316,-185,947,2967,3002189,0.00002441,0.00001526,0.00014648,-109.68,-92.80,986.72,-316,-316,-140,1214,85,1045
+125700,-193,-158,1045,2946,3001150,0.00001221,0.00001373,0.00012207,-100.44,-89.12,987.40,-218,-316,-140,1214,85,1045
+125701,-218,-68,1032,2918,3001468,0.00001373,0.00000916,0.00010986,-96.12,-86.08,984.96,-218,-316,-140,1214,85,1032
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat run_4_col 
+./baaracuda sheep_4_col.csv
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat sheep_4_col.csv | tail -n 5
+-118,-89,960,96
+-143,-93,972,97
+-128,-80,962,96
+-132,-94,974,97
+-136,-78,968,96
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ./run_4_col > out_4_col.csv
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat out_4_col.csv | head -n 5
+ID,INPUT_1,INPUT_2,INPUT_3,INPUT_4,MAG,AMI,STDEV_1,STDEV_2,STDEV_3,STDEV_4,MEAN_1,MEAN_2,MEAN_3,MEAN_4,MIN_1,MIN_2,MIN_3,MIN_4,MAX_1,MAX_2,MAX_3,MAX_4
+0,-114,-140,971,97,654,28347,0.00000916,0.00001221,0.00013428,0.00001678,-107.08,-152.56,968.84,96.48,-116,-167,954,95,-98,-129,980,98
+1,-106,-152,980,98,661,26863,0.00001068,0.00000916,0.00004883,0.00001221,-106.76,-151.92,968.76,96.44,-116,-167,954,95,-98,-124,980,98
+2,-98,-134,965,96,674,25402,0.00000916,0.00002747,0.00006104,0.00000153,-107.08,-152.76,967.80,96.32,-116,-173,954,95,-98,-124,978,97
+3,-106,-142,974,97,744,23990,0.00000916,0.00000610,0.00002441,0.00000305,-107.92,-153.28,968.12,96.36,-119,-173,954,95,-100,-124,978,97
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ make clean
+rm -f *~ baaracuda csvloader.o kernels.o runner.o
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ make profile
+nvcc --compiler-options -Wall -DPROFILE -c csvloader.cpp
+nvcc --compiler-options -Wall -DPROFILE -c kernels.cu
+nvcc --compiler-options -Wall -DPROFILE -c runner.cu kernels.o
+nvcc --compiler-options -Wall -DPROFILE main.cu csvloader.o kernels.o runner.o -o baaracuda
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ cat run_profile 
+nvprof --profile-child-processes ./run > /dev/null
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ ./run_profile 
+==24526== NVPROF is profiling process 24526, command: ./baaracuda sheep_imu_data.csv
+==24526== Profiling application: ./baaracuda sheep_imu_data.csv
+==24526== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 63.81%  1.0879ms         6  181.31us  78.879us  232.80us  [CUDA memcpy DtoH]
+ 14.77%  251.77us         1  251.77us  251.77us  251.77us  [CUDA memcpy HtoD]
+  7.51%  127.97us         1  127.97us  127.97us  127.97us  standardDeviation(float*, float*, float const *, int, int, int)
+  5.30%  90.335us         1  90.335us  90.335us  90.335us  minmax(float*, float*, float const *, int, int, int)
+  4.35%  74.239us         1  74.239us  74.239us  74.239us  signalMagnitude(float*, float const *, int, int)
+  4.26%  72.639us         1  72.639us  72.639us  72.639us  averageMovementIntensity(float*, float const *, int, int)
+
+==24526== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 93.07%  110.65ms         1  110.65ms  110.65ms  110.65ms  cudaProfilerStart
+  5.33%  6.3383ms         7  905.47us  270.10us  1.3405ms  cudaMemcpy
+  0.57%  675.79us         7  96.541us  76.335us  128.74us  cudaFree
+  0.51%  607.15us         7  86.735us  71.458us  104.22us  cudaMalloc
+  0.37%  439.44us       166  2.6470us     136ns  108.67us  cuDeviceGetAttribute
+  0.07%  84.722us         4  21.180us  17.781us  28.677us  cudaLaunch
+  0.03%  39.962us         2  19.981us  18.874us  21.088us  cuDeviceGetName
+  0.03%  36.234us         2  18.117us  17.979us  18.255us  cuDeviceTotalMem
+  0.01%  10.630us        20     531ns     177ns  4.9810us  cudaSetupArgument
+  0.00%  3.4700us         4     867ns     554ns  1.5600us  cudaConfigureCall
+  0.00%  1.6680us         2     834ns     283ns  1.3850us  cuDeviceGetCount
+  0.00%  1.3060us         4     326ns     198ns     526ns  cuDeviceGet
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32ma4[m $ exit
+logout
+Connection to bourbaki closed.
+[0;30;42mUNE[m [0;37mjnagy[m:[1;32m~[m $ exit
+exit
+
+Script done on Sun 25 Sep 2016 18:02:52 AEST
+8862
